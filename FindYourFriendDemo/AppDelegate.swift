@@ -8,18 +8,53 @@
 
 import UIKit
 import CoreData
+import Firebase
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
+    var storyboard: UIStoryboard?
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        FIRApp.configure()
+        FIRDatabase.database().persistenceEnabled = true
+
+        self.storyboard =  UIStoryboard(name: "Main", bundle: Bundle.main)
+        let currentUser = FIRAuth.auth()?.currentUser
+        
+        //user is not logged in
+        if currentUser == nil {
+            perform(#selector(handleLogout), with: nil, afterDelay: 1000)
+            
+        } else if currentUser != nil {
+            
+            let uid = FIRAuth.auth()?.currentUser?.uid
+            self.window?.rootViewController = (self.storyboard?.instantiateViewController(withIdentifier: "navigationID"))! as! NavigationController
+         FIRDatabase.database().reference().child("users").child(uid!).observeSingleEvent(of: .value, with: { (snapshot) in
+                print(snapshot)
+                }, withCancel: nil)
+            
+        }
+        
         return true
     }
 
+    func handleLogout() {
+        
+        do {
+            try FIRAuth.auth()?.signOut()
+        } catch let logoutError {
+            print(logoutError)
+        }
+        
+        self.window?.rootViewController = (self.storyboard?.instantiateViewController(withIdentifier:"loginControllerID"))! as! LoginController
+      
+    }
+
+
+    
     func applicationWillResignActive(_ application: UIApplication) {
         // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
         // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.

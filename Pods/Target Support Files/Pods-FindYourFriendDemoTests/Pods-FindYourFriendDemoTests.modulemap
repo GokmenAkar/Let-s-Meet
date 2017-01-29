@@ -1,0 +1,6 @@
+framework module Pods_FindYourFriendDemoTests {
+  umbrella header "Pods-FindYourFriendDemoTests-umbrella.h"
+
+  export *
+  module * { export * }
+}
