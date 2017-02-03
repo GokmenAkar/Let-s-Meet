@@ -20,5 +20,5 @@ This app was developed using Swift 3.0, It helps people to meet each other easil
 
 #### Messages
 
-![Messages](http://i.hizliresim.com/DBZoZl.png) 
+![Messages](http://i.hizliresim.com/r6rYPz.png) 
 
