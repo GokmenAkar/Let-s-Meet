@@ -4,7 +4,7 @@ This app was developed using Swift 3.0, It helps people to meet each other easil
 
 #### __Select a Location__
 
-![Friends List](https://i.hizliresim.com/414R8A.gif)  
+![Friends List](http://i.hizliresim.com/414R8A.gif)  
 
 #### __Friends List__
 
