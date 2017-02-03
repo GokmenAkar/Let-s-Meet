@@ -20,5 +20,5 @@ This app was developed using Swift 3.0, It helps people to meet each other easil
 
 #### Messages
 
-![Messages](https://github.com/GokmenAkar/Let-s-Meet/blob/master/IMG_2549.PNG) 
+![Messages](http://i.hizliresim.com/DBZoZl.png) 
 
