@@ -21,25 +21,25 @@ class MapPage: UIViewController, CLLocationManagerDelegate, UITabBarControllerDe
     var profilePageController: ProfilePage?
     
     var image = UIImage()
-
+    
     var locationManager: CLLocationManager?
     var currentLocation: CLLocation?
     var annotationViewww: MKAnnotationView?
-
+    
     var ref = FIRDatabase.database().reference()
     let userID = FIRAuth.auth()?.currentUser?.uid
-
+    
     static var selectedUsersInfo = [NSDictionary?]()
     static var userProfileUrl: String!
     var dic = [String]()
     
     var timer : Timer!
     var timerr : Timer!
-    var counter = 0 
-
+    var counter = 0
+    
     var customPoint = MKPointAnnotation()
     var pressedPinIcon: MKAnnotationView! = nil
-
+    
     var annotation = MKPointAnnotation()
     var annotationLat = CLLocationDegrees()
     var annotationLong = CLLocationDegrees()
@@ -50,12 +50,12 @@ class MapPage: UIViewController, CLLocationManagerDelegate, UITabBarControllerDe
     var amISelected = false
     
     let uyari = "*********************************"
-
+    
     // -- // -- //  -- // -- //  -- // -- //  -- // -- //  -- // -- //  -- // -- //  -- // -- //  -- // -- //  -- // -- //
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
         if userID == nil {
             print("kullanici yok")
         } else {
@@ -66,40 +66,45 @@ class MapPage: UIViewController, CLLocationManagerDelegate, UITabBarControllerDe
         
         self.locationManager?.requestWhenInUseAuthorization()
         if (CLLocationManager.locationServicesEnabled()) {
-        locationManager = CLLocationManager()
-        locationManager?.delegate = self
-        locationManager?.startUpdatingLocation()
-        locationManager?.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
-        locationManager?.requestAlwaysAuthorization()
+            locationManager = CLLocationManager()
+            locationManager?.delegate = self
+            locationManager?.startUpdatingLocation()
+            locationManager?.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
+            locationManager?.requestAlwaysAuthorization()
         }
         let lat = self.locationManager?.location?.coordinate.latitude
         let long = self.locationManager?.location?.coordinate.longitude
-       
+        
         if lat == nil && long == nil {
             
         } else {
             self.screenZoom(lat: lat!, long: long!)
             
         }
-        observeLocations()
+        //observeLocations()
         
-//        dic.append("\(self.locationManager!.location!.coordinate.latitude)")
+        //        dic.append("\(self.locationManager!.location!.coordinate.latitude)")
         
         self.badgeCountForRequest()
         
-        _ = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true, block: { timer in
-            self.justForFriendUserDirection()
-        })
+        /*
+         _ = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true, block: { timer in
+         self.justForFriendUserDirection()
+         })
+         */
+        
         // (I) Mevcut kullanici bilgileri Firebase'e gonderilir
         // (II) amISelected() Eger mevcut kullanici karsidaki kullaniciyi tableview'de secmisse, karsidaki kullanicida mevcut kullanicinin yerini belirt.
         // (III) Secili kullanicilar harita'ya eklenir
         // (IV) Kullanici lokasyonu etrafindaki yuvarlak
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { (timer) in
-            self.observeLocations()
-            self.amIselectedFunc()
-            self.lokasyonDagit()
-            // self.circleFunc()
-        }
+        /*
+         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { (timer) in
+         self.observeLocations()
+         self.amIselectedFunc()
+         self.lokasyonDagit()
+         // self.circleFunc()
+         }
+         */
         // Status bar icin koyu arkaplan.
         customizeAppearance()
     }
@@ -112,9 +117,9 @@ class MapPage: UIViewController, CLLocationManagerDelegate, UITabBarControllerDe
     }
     
     func customizeAppearance() {
-                let view = UIView(frame: CGRect(x: 0.0, y: 0.0, width: UIScreen.main.bounds.size.width, height: 20.0))
-                view.backgroundColor = UIColor.init(red: 21/255, green: 79/255, blue: 114/255, alpha: 1.0)
-                self.view.addSubview(view)
+        let view = UIView(frame: CGRect(x: 0.0, y: 0.0, width: UIScreen.main.bounds.size.width, height: 20.0))
+        view.backgroundColor = UIColor.init(red: 21/255, green: 79/255, blue: 114/255, alpha: 1.0)
+        self.view.addSubview(view)
     }
     
     func pinEkle(_ name:String, lat:CLLocationDegrees, long:CLLocationDegrees) {
@@ -123,7 +128,7 @@ class MapPage: UIViewController, CLLocationManagerDelegate, UITabBarControllerDe
         
         point.coordinate = CLLocationCoordinate2DMake(lat, long)
         point.title = name
-
+        
         mapView.addAnnotation(point)
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true, block: { (timer) in
             self.mapView.removeAnnotation(point)
@@ -134,7 +139,7 @@ class MapPage: UIViewController, CLLocationManagerDelegate, UITabBarControllerDe
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         
         var annotationView: MyAnnotationView?
-
+        
         let size = CGSize(width: 27, height: 27)
         let sizePin = CGSize(width: 46, height: 46)
         
@@ -150,25 +155,25 @@ class MapPage: UIViewController, CLLocationManagerDelegate, UITabBarControllerDe
                     annotationView?.image = UIImage(named: "emptyPhoto1.png")?.resized(to: size)
                     
                 } else {
-                ref.child("users").child(userID!).observe(.value, with: { (snapshot) in
-                let snap = snapshot.value as? [String: Any]
-                let profileImageUrl = snap?["profileImageUrl"] as? String
-                    
-                    if profileImageUrl != nil {
-                        let imageUrl = URL(string: profileImageUrl!)
-                        annotationView?.image = try! UIImage.init(withContentsOfUrl: imageUrl!)?.resized(to: size)
+                    ref.child("users").child(userID!).observe(.value, with: { (snapshot) in
+                        let snap = snapshot.value as? [String: Any]
+                        let profileImageUrl = snap?["profileImageUrl"] as? String
                         
-                        annotationView?.layer.masksToBounds = true
-                        annotationView?.layer.cornerRadius = annotationView!.image!.size.height/2
+                        if profileImageUrl != nil {
+                            let imageUrl = URL(string: profileImageUrl!)
+                            annotationView?.image = try! UIImage.init(withContentsOfUrl: imageUrl!)?.resized(to: size)
+                            
+                            annotationView?.layer.masksToBounds = true
+                            annotationView?.layer.cornerRadius = annotationView!.image!.size.height/2
                         } else {
-                        annotationView?.image = UIImage(named: "emptyPhoto1.png")?.resized(to: size)
+                            annotationView?.image = UIImage(named: "emptyPhoto1.png")?.resized(to: size)
                         }
-                })
-            }
+                    })
+                }
             } else {
                 annotationView?.annotation = annotation
             }
-                
+            
             return annotationView
         }
         
@@ -196,7 +201,7 @@ class MapPage: UIViewController, CLLocationManagerDelegate, UITabBarControllerDe
                 pressedPinIcon.canShowCallout = true
                 pressedPinIcon.centerOffset = CGPoint(x: 0, y: -20)
             } else {
-                    pressedPinIcon?.annotation = annotation
+                pressedPinIcon?.annotation = annotation
             }
             
             return pressedPinIcon
@@ -206,6 +211,13 @@ class MapPage: UIViewController, CLLocationManagerDelegate, UITabBarControllerDe
     }
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        print("dinledi")
+        //self.justForFriendUserDirection()
+        self.showDirections()
+        self.justForFriendUserDirection()
+        self.observeLocations()
+        self.lokasyonDagit()
+        self.amIselectedFunc()
         
     }
     
@@ -235,7 +247,7 @@ class MapPage: UIViewController, CLLocationManagerDelegate, UITabBarControllerDe
         let long = self.locationManager?.location?.coordinate.longitude
         var locValues = [String: Any]()
         if lat == nil && long == nil {
-
+            
         }else {
             locValues = ["latitude": lat!, "longitude": long!] as [String: Any]
         }
@@ -260,19 +272,19 @@ class MapPage: UIViewController, CLLocationManagerDelegate, UITabBarControllerDe
         if userID == nil {
             
         } else {
-        ref.child("users").child(userID!).child("requests").observe(.value, with: { (snapshot) in
-            let snap = snapshot.value as? NSDictionary
-            
-            if snap != nil {
-                SearchVC.badgeCount = "\(snap!.count)"
-            } else {
+            ref.child("users").child(userID!).child("requests").observe(.value, with: { (snapshot) in
+                let snap = snapshot.value as? NSDictionary
                 
+                if snap != nil {
+                    SearchVC.badgeCount = "\(snap!.count)"
+                } else {
+                    
+                }
+            })
+                
+            { (error) in
+                print(error.localizedDescription)
             }
-        })
-        
-        { (error) in
-            print(error.localizedDescription)
-        }
         }
     }
     func screenZoom(lat:CLLocationDegrees, long:CLLocationDegrees) {
@@ -304,7 +316,7 @@ class MapPage: UIViewController, CLLocationManagerDelegate, UITabBarControllerDe
     func lokasyonDagit() {
         
         //Secili kullanicilari haritada goster
-         for item in MapPage.selectedUsersInfo {
+        for item in MapPage.selectedUsersInfo {
             let dic = item as! [String : Any]
             let id = dic["id"] as! String // secili kullanici id'si.
             ref.child("locations").child("\(id)").observe(.value, with: { (snapshot) in
@@ -319,32 +331,33 @@ class MapPage: UIViewController, CLLocationManagerDelegate, UITabBarControllerDe
     func amIselectedFunc() {
         if userID != nil {
             self.amISelected = true
-        ref.child("selectedfriends").child(userID!).observe(.value, with: { (snapshot) in
-            let snap = snapshot.value as? [String: Bool]
-            if snap != nil {
-                for (key, val) in snap! {
-                    if val == true  {
-                        self.ref.child("locations").child(key).observe(.value, with: { (locSnap) in
-                            let locationSnap = locSnap.value as? [String: Any]
-                            let latitudeLoc = locationSnap?["latitude"] as? CLLocationDegrees
-                            let longitudeLoc = locationSnap?["longitude"] as? CLLocationDegrees
-                            
-                            self.ref.child("users").child(key).observe(.value, with: { (forNameSnap) in
-                                let nameSnap = forNameSnap.value as? [String: Any]
-                                let name = nameSnap?["name"] as! String
-                                if (latitudeLoc != nil) && (longitudeLoc != nil) {
-                                    self.pinEkle(name, lat: latitudeLoc!, long: longitudeLoc!)
-                                }
+            ref.child("selectedfriends").child(userID!).observe(.value, with: { (snapshot) in
+                let snap = snapshot.value as? [String: Bool]
+                if snap != nil {
+                    for (key, val) in snap! {
+                        if val == true  {
+                            self.ref.child("locations").child(key).observe(.value, with: { (locSnap) in
+                                let locationSnap = locSnap.value as? [String: Any]
+                                let latitudeLoc = locationSnap?["latitude"] as? CLLocationDegrees
+                                let longitudeLoc = locationSnap?["longitude"] as? CLLocationDegrees
+                                
+                                self.ref.child("users").child(key).observe(.value, with: { (forNameSnap) in
+                                    let nameSnap = forNameSnap.value as? [String: Any]
+                                    let name = nameSnap?["name"] as! String
+                                    if (latitudeLoc != nil) && (longitudeLoc != nil) {
+                                        self.pinEkle(name, lat: latitudeLoc!, long: longitudeLoc!)
+                                    }
+                                })
                             })
-                        })
-//                        print("Kullanici secim yapmis, lokasyon diger kullanicinin haritasinda beliricek")
+                            //                        print("Kullanici secim yapmis, lokasyon diger kullanicinin haritasinda beliricek")
+                        }
                     }
+                    
+                } else {
                 }
-            } else {
-            }
-        })
+            })
+        }
     }
-}
     
     func gestureFunc() {
         print("direction'a basildi")
@@ -359,11 +372,14 @@ class MapPage: UIViewController, CLLocationManagerDelegate, UITabBarControllerDe
             
             self.request.source = MKMapItem(placemark: MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: latitude!, longitude: longitude!), addressDictionary: nil))
             
-                ref.child("selectedfriends").child(userID!).observe(.value, with: { (snapshot) in
-                    
-                    let snap = snapshot.value as? [String: Bool]
-                    if snap == nil {
-                    } else {
+            if userID == nil {
+                print("nil")
+            } else {
+            ref.child("selectedfriends").child(userID!).observe(.value, with: { (snapshot) in
+                
+                let snap = snapshot.value as? [String: Bool]
+                if snap == nil {
+                } else {
                     for (key, _) in snap! {
                         
                         self.ref.child("users").child(key).child("selectedLocation").observe(.value, with: { (forSelectedLocationSnap) in
@@ -411,9 +427,9 @@ class MapPage: UIViewController, CLLocationManagerDelegate, UITabBarControllerDe
                             })
                         })
                     }
-                   }
-                })
-            
+                }
+            })
+        }
             self.request.requestsAlternateRoutes = false
             self.request.transportType = .any
             
@@ -450,30 +466,30 @@ class MapPage: UIViewController, CLLocationManagerDelegate, UITabBarControllerDe
             self.request.source = MKMapItem(placemark: MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: latitude!, longitude: longitude!), addressDictionary: nil))
             
             if amISelected == false {
-            self.request.destination = MKMapItem(placemark: MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: lat, longitude: long), addressDictionary: nil))
+                self.request.destination = MKMapItem(placemark: MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: lat, longitude: long), addressDictionary: nil))
             } else {
-                 ref.child("selectedfriends").child(userID!).observe(.value, with: { (snapshot) in
+                ref.child("selectedfriends").child(userID!).observe(.value, with: { (snapshot) in
                     
                     let snap = snapshot.value as? [String: Bool]
                     if snap == nil {
                         print("Snap yok")
                     } else {
-                    for (key, _) in snap! {
-                        self.ref.child("users").child(key).child("selectedLocation").observe(.value, with: { (forSelectedLocationSnap) in
+                        for (key, _) in snap! {
+                            self.ref.child("users").child(key).child("selectedLocation").observe(.value, with: { (forSelectedLocationSnap) in
+                                
+                                let snapForSelectedLoc = forSelectedLocationSnap.value as? [String: Any]
+                                let selectedLatitude = snapForSelectedLoc?["latitude"] as! CLLocationDegrees
+                                let selectedLongitude = snapForSelectedLoc?["longitude"] as! CLLocationDegrees
+                                self.request.destination = MKMapItem(placemark: MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: selectedLatitude, longitude: selectedLongitude)))
+                                
+                            })
                             
-                            let snapForSelectedLoc = forSelectedLocationSnap.value as? [String: Any]
-                            let selectedLatitude = snapForSelectedLoc?["latitude"] as! CLLocationDegrees
-                            let selectedLongitude = snapForSelectedLoc?["longitude"] as! CLLocationDegrees
-                            self.request.destination = MKMapItem(placemark: MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: selectedLatitude, longitude: selectedLongitude)))
-                            
-                        })
-                        
+                        }
                     }
-                }
                     
-            })
+                })
                 
-        }
+            }
             self.request.requestsAlternateRoutes = false
             self.request.transportType = .any
             
@@ -511,9 +527,9 @@ class MapPage: UIViewController, CLLocationManagerDelegate, UITabBarControllerDe
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
         
         let renderer = MKPolylineRenderer(polyline: overlay as! MKPolyline)
-        
         renderer.strokeColor = UIColor.init(red: 74/255, green: 114/255, blue: 255/255, alpha: 1.0)
         renderer.lineWidth = 4
+        
         
         return renderer
     }
@@ -526,7 +542,7 @@ class MapPage: UIViewController, CLLocationManagerDelegate, UITabBarControllerDe
         let long = annotation.coordinate.longitude
         
         for item in MapPage.selectedUsersInfo {
-
+            
             let dic = item as! [String : Any]
             // secili kullanici id'si.
             let id = dic["id"] as! String
@@ -539,44 +555,44 @@ class MapPage: UIViewController, CLLocationManagerDelegate, UITabBarControllerDe
                 
                 if latitude != nil && longitude != nil {
                     
-             self.request.source = MKMapItem(placemark: MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: latitude, longitude: longitude), addressDictionary: nil))
-                
-            self.request.destination = MKMapItem(placemark: MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: lat, longitude: long), addressDictionary: nil))
-             self.request.requestsAlternateRoutes = false
-             self.request.transportType = .any
+                    self.request.source = MKMapItem(placemark: MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: latitude, longitude: longitude), addressDictionary: nil))
                     
-             let directions = MKDirections(request: self.request)
+                    self.request.destination = MKMapItem(placemark: MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: lat, longitude: long), addressDictionary: nil))
+                    self.request.requestsAlternateRoutes = false
+                    self.request.transportType = .any
+                    
+                    let directions = MKDirections(request: self.request)
                     let mapov = self.mapView.overlays
-             directions.calculate { response, error in
-             guard let unwrappedResponse = response else { return }
-                self.mapView.removeOverlays(mapov)
-                
-                for route in unwrappedResponse.routes {
-                
-                    if route.polyline != nil {
-                        self.mapView.remove(route.polyline)
+                    directions.calculate { response, error in
+                        guard let unwrappedResponse = response else { return }
+                        self.mapView.removeOverlays(mapov)
+                        
+                        for route in unwrappedResponse.routes {
+                            
+                            if route.polyline != nil {
+                                self.mapView.remove(route.polyline)
+                            }
+                            
+                            self.mapView.add(route.polyline)
+                            self.mapView.setVisibleMapRect(route.polyline.boundingMapRect, animated: true)
+                        }
                     }
-                
-                    self.mapView.add(route.polyline)
-                    self.mapView.setVisibleMapRect(route.polyline.boundingMapRect, animated: true)
                 }
-         }
-    }
-    })
+            })
             
             
         }
         
     }
-
-
+    
+    
     @IBAction func longPressBtn(_ sender: UILongPressGestureRecognizer) {
         let location = sender.location(in: self.mapView)
         let locCoordinate = self.mapView.convert(location, toCoordinateFrom: self.mapView)
         let lat = annotation.coordinate.latitude
         let long = annotation.coordinate.longitude
         var locValues = [String: Any]()
-
+        
         annotation.coordinate = locCoordinate
         annotation.title = "Let's meet up!"
         
